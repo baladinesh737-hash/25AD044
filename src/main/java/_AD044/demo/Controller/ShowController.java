@@ -31,14 +31,11 @@ public class ShowController {
     public ResponseEntity<Show> updateShow(
             @PathVariable Long id,
             @RequestBody Show show) {
-
         return ResponseEntity.ok(showService.updateShow(id, show));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteShow(@PathVariable Long id) {
-
         showService.deleteShow(id);
-
         return ResponseEntity.ok("Show deleted successfully");
     }
 }

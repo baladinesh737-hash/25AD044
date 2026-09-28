@@ -1,15 +1,16 @@
 package _AD044.demo.Service;
 
 import _AD044.demo.Models.Show;
-import _AD044.demo.Respository.ShowRespository;
+import _AD044.demo.Repository.ShowRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class ShowService {
-    private final ShowRespository showRepository;
-    public ShowService(ShowRespository showRepository) {
+    private final ShowRepository showRepository;
+
+    public ShowService(ShowRepository showRepository) {
         this.showRepository = showRepository;
     }
     public Show createShow(Show show) {
@@ -18,6 +19,7 @@ public class ShowService {
     public List<Show> getAllShows() {
         return showRepository.findAll();
     }
+
     public Show getShowById(Long id) {
         return showRepository.findById(id)
                 .orElseThrow(() ->

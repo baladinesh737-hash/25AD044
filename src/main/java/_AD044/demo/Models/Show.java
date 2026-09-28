@@ -1,14 +1,10 @@
 package _AD044.demo.Models;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "show")
+@Table(name = "shows")
 public class Show {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,4 +39,3 @@ public class Show {
         this.totalSeats = totalSeats;
     }
 }
-
