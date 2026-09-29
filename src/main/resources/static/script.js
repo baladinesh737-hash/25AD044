@@ -1,40 +1,63 @@
 const API_URL = "http://localhost:8080/api";
 
 
-/* =========================
-   LOAD SHOWS
-========================= */
+// ==========================================
+// LOAD SHOWS
+// ==========================================
 
 async function loadShows() {
 
-    const container =
-        document.getElementById("showsContainer");
-
     try {
 
-        const response =
-            await fetch(`${API_URL}/shows`);
+        const response = await fetch(`${API_URL}/shows`);
 
         if (!response.ok) {
-            throw new Error(
-                `Unable to load shows. HTTP ${response.status}`
-            );
+            throw new Error(`HTTP ${response.status}`);
         }
 
-        const shows =
-            await response.json();
+        const shows = await response.json();
 
-        container.innerHTML = "";
+        const showsContainer =
+            document.getElementById("showsContainer");
+
+        if (!showsContainer) {
+            return;
+        }
+
+        showsContainer.innerHTML = "";
 
         if (shows.length === 0) {
 
-            container.innerHTML =
+            showsContainer.innerHTML =
                 "<p>No shows available.</p>";
 
             return;
         }
 
-        shows.forEach(show => {
+        // Load every show
+        for (const show of shows) {
+
+            let availableSeats = show.totalSeats;
+
+            try {
+
+                const seatResponse = await fetch(
+                    `${API_URL}/shows/${show.id}/available-seats`
+                );
+
+                if (seatResponse.ok) {
+
+                    availableSeats =
+                        await seatResponse.json();
+                }
+
+            } catch (seatError) {
+
+                console.error(
+                    "Unable to load seat count:",
+                    seatError
+                );
+            }
 
             const card =
                 document.createElement("div");
@@ -45,167 +68,142 @@ async function loadShows() {
                 <h3>${show.title}</h3>
 
                 <p>
-                    <strong>Show ID:</strong>
-                    ${show.id}
-                </p>
-
-                <p>
                     <strong>Show Time:</strong>
                     ${formatDate(show.showTime)}
                 </p>
 
                 <p>
-                    <strong>Total Seats:</strong>
-                    ${show.totalSeats}
+                    <strong>Available Seats:</strong>
+                    ${availableSeats} / ${show.totalSeats}
                 </p>
 
-                <button
-                    class="btn"
-                    onclick="selectShow(${show.id})">
-                    Book This Show
-                </button>
+                ${
+                availableSeats > 0
+                    ?
+                    `<button onclick="selectShow(${show.id})">
+                        Book Ticket
+                    </button>`
+                    :
+                    `<button disabled>
+                        House Full
+                    </button>`
+            }
             `;
 
-            container.appendChild(card);
-
-        });
+            showsContainer.appendChild(card);
+        }
 
     } catch (error) {
 
-        console.error("SHOW ERROR:", error);
+        console.error("Show loading error:", error);
 
-        container.innerHTML = `
-            <p>
-                Unable to load shows.
-                ${error.message}
-            </p>
-        `;
+        const showsContainer =
+            document.getElementById("showsContainer");
+
+        if (showsContainer) {
+
+            showsContainer.innerHTML =
+                `<p class="error-message">
+                    Unable to load shows. ${error.message}
+                </p>`;
+        }
     }
 }
 
 
-/* =========================
-   SELECT SHOW
-========================= */
+// ==========================================
+// SELECT SHOW
+// ==========================================
 
 function selectShow(showId) {
 
-    document.getElementById("showId").value =
-        showId;
+    const showIdInput =
+        document.getElementById("showId");
 
-    document
-        .getElementById("booking")
-        .scrollIntoView({
+    if (showIdInput) {
+
+        showIdInput.value = showId;
+    }
+
+    const bookingSection =
+        document.getElementById("booking");
+
+    if (bookingSection) {
+
+        bookingSection.scrollIntoView({
             behavior: "smooth"
         });
+    }
 }
 
 
-/* =========================
-   CREATE BOOKING
-========================= */
+// ==========================================
+// BOOKING FORM
+// ==========================================
 
-document
-    .getElementById("bookingForm")
-    .addEventListener("submit", async function(event) {
-
-        event.preventDefault();
+const bookingForm =
+    document.getElementById("bookingForm");
 
 
-        /* Get form values */
+if (bookingForm) {
 
-        const studentId =
-            Number(
-                document.getElementById("studentId").value
-            );
+    bookingForm.addEventListener(
+        "submit",
+        async function (event) {
 
-        const showId =
-            Number(
-                document.getElementById("showId").value
-            );
+            event.preventDefault();
 
-        const seatsBooked =
-            Number(
-                document.getElementById("seatsBooked").value
-            );
+            const studentId =
+                document.getElementById("studentId").value;
 
+            const showId =
+                document.getElementById("showId").value;
 
-        const message =
-            document.getElementById("bookingMessage");
+            const seatsBooked =
+                document.getElementById("seatsBooked").value;
 
 
-        /* =========================
-           FRONTEND VALIDATION
-        ========================= */
+            // Basic validation
 
-        if (!studentId || studentId <= 0) {
+            if (!studentId) {
 
-            message.innerHTML =
-                "Please enter a valid Student ID.";
+                alert("Please enter Student ID.");
 
-            message.style.color = "red";
-
-            return;
-        }
-
-
-        if (!showId || showId <= 0) {
-
-            message.innerHTML =
-                "Please enter a valid Show ID.";
-
-            message.style.color = "red";
-
-            return;
-        }
-
-
-        if (!seatsBooked || seatsBooked <= 0) {
-
-            message.innerHTML =
-                "Please enter a valid number of seats.";
-
-            message.style.color = "red";
-
-            return;
-        }
-
-
-        /* =========================
-           BOOKING OBJECT
-        ========================= */
-
-        const booking = {
-
-            seatsBooked: seatsBooked,
-
-            status: "CONFIRMED",
-
-            show: {
-                id: showId
-            },
-
-            student: {
-                id: studentId
+                return;
             }
 
-        };
+            if (!showId) {
+
+                alert("Please enter Show ID.");
+
+                return;
+            }
+
+            if (!seatsBooked || Number(seatsBooked) <= 0) {
+
+                alert("Please enter a valid number of seats.");
+
+                return;
+            }
 
 
-        console.log(
-            "Sending booking:",
-            booking
-        );
+            const bookingData = {
+
+                seatsBooked: Number(seatsBooked),
+
+                show: {
+                    id: Number(showId)
+                },
+
+                student: {
+                    id: Number(studentId)
+                }
+            };
 
 
-        /* =========================
-           SEND TO SPRING BOOT
-        ========================= */
+            try {
 
-        try {
-
-            const response =
-                await fetch(
+                const response = await fetch(
                     `${API_URL}/bookings`,
                     {
                         method: "POST",
@@ -215,122 +213,93 @@ document
                                 "application/json"
                         },
 
-                        body:
-                            JSON.stringify(booking)
+                        body: JSON.stringify(
+                            bookingData
+                        )
                     }
                 );
 
 
-            /* Get backend response */
-
-            const responseText =
-                await response.text();
+                const responseText =
+                    await response.text();
 
 
-            console.log(
-                "HTTP Status:",
-                response.status
-            );
+                if (!response.ok) {
 
-            console.log(
-                "Backend Response:",
-                responseText
-            );
-
-
-            /* =========================
-               CHECK ERROR
-            ========================= */
-
-            if (!response.ok) {
-
-                let errorMessage =
-                    responseText;
-
-                try {
-
-                    const errorJson =
-                        JSON.parse(responseText);
-
-                    errorMessage =
-                        errorJson.message ||
-                        errorJson.error ||
-                        responseText;
-
-                } catch (e) {
-                    // Response is not JSON
+                    throw new Error(
+                        `HTTP ${response.status}: ${responseText}`
+                    );
                 }
 
 
-                throw new Error(
-                    `HTTP ${response.status}: ${errorMessage}`
+                const booking =
+                    JSON.parse(responseText);
+
+
+                alert(
+                    "Ticket booked successfully! Booking ID: "
+                    + booking.id
                 );
+
+
+                // Clear form
+
+                bookingForm.reset();
+
+
+                // Reload shows
+                // to update available seats
+
+                await loadShows();
+
+
+                // Reload bookings
+
+                await loadBookings();
+
+            } catch (error) {
+
+                console.error(
+                    "Booking error:",
+                    error
+                );
+
+                const message =
+                    document.getElementById(
+                        "bookingMessage"
+                    );
+
+                if (message) {
+
+                    message.innerText =
+                        "Booking failed: "
+                        + error.message;
+
+                    message.style.color = "red";
+
+                } else {
+
+                    alert(
+                        "Booking failed: "
+                        + error.message
+                    );
+                }
             }
-
-
-            /* =========================
-               SUCCESS
-            ========================= */
-
-            const result =
-                JSON.parse(responseText);
-
-
-            message.innerHTML =
-                `Booking successful! Booking ID: ${result.id}`;
-
-            message.style.color = "green";
-
-
-            /* Clear form */
-
-            document
-                .getElementById("bookingForm")
-                .reset();
-
-
-            /* Reload bookings */
-
-            loadBookings();
-
-
-            /* Reload shows */
-
-            loadShows();
-
-
-        } catch (error) {
-
-            console.error(
-                "BOOKING ERROR:",
-                error
-            );
-
-
-            message.innerHTML =
-                `Booking failed: ${error.message}`;
-
-            message.style.color = "red";
         }
+    );
+}
 
-    });
 
-
-/* =========================
-   LOAD BOOKINGS
-========================= */
+// ==========================================
+// LOAD BOOKINGS
+// ==========================================
 
 async function loadBookings() {
-
-    const container =
-        document.getElementById("bookingsContainer");
 
     try {
 
         const response =
-            await fetch(
-                `${API_URL}/bookings`
-            );
+            await fetch(`${API_URL}/bookings`);
 
 
         if (!response.ok) {
@@ -345,33 +314,63 @@ async function loadBookings() {
             await response.json();
 
 
-        container.innerHTML = "";
+        const bookingsContainer =
+            document.getElementById(
+                "bookingsContainer"
+            );
 
 
-        if (bookings.length === 0) {
-
-            container.innerHTML =
-                "<p>No bookings found.</p>";
+        if (!bookingsContainer) {
 
             return;
         }
 
 
-        bookings.forEach(booking => {
+        bookingsContainer.innerHTML = "";
+
+
+        if (bookings.length === 0) {
+
+            bookingsContainer.innerHTML =
+                "<p>No bookings available.</p>";
+
+            return;
+        }
+
+
+        bookings.forEach(function (booking) {
 
             const card =
                 document.createElement("div");
-
 
             card.className =
                 "booking-card";
 
 
-            card.innerHTML = `
+            const studentName =
+                booking.student
+                    ? booking.student.name
+                    : "Unknown";
 
-                <h3>
-                    Booking #${booking.id}
-                </h3>
+
+            const movieTitle =
+                booking.show
+                    ? booking.show.title
+                    : "Unknown";
+
+
+            card.innerHTML = `
+                <h3>Booking #${booking.id}</h3>
+
+                <p>
+                    <strong>Student:</strong>
+                    ${studentName}
+                </p>
+
+                <p>
+                    <strong>Movie:</strong>
+                    ${movieTitle}
+                </p>
 
                 <p>
                     <strong>Seats:</strong>
@@ -383,34 +382,20 @@ async function loadBookings() {
                     ${booking.status}
                 </p>
 
-                <p>
-                    <strong>Show ID:</strong>
-                    ${booking.show?.id ?? "-"}
-                </p>
-
-                <p>
-                    <strong>Student ID:</strong>
-                    ${booking.student?.id ?? "-"}
-                </p>
-
                 ${
                 booking.status === "CONFIRMED"
                     ?
-                    `
-                    <button
-                        class="btn"
+                    `<button
                         onclick="cancelBooking(${booking.id})">
-                        Cancel Booking
-                    </button>
-                    `
+                        Cancel Ticket
+                    </button>`
                     :
                     ""
             }
-
             `;
 
 
-            container.appendChild(card);
+            bookingsContainer.appendChild(card);
 
         });
 
@@ -418,33 +403,49 @@ async function loadBookings() {
     } catch (error) {
 
         console.error(
-            "BOOKING LOAD ERROR:",
+            "Booking loading error:",
             error
         );
 
+        const bookingsContainer =
+            document.getElementById(
+                "bookingsContainer"
+            );
 
-        container.innerHTML =
-            `
-            <p>
-                Unable to load bookings.
-                ${error.message}
-            </p>
-            `;
+        if (bookingsContainer) {
+
+            bookingsContainer.innerHTML =
+                `<p class="error-message">
+                    Unable to load bookings.
+                </p>`;
+        }
     }
 }
 
 
-/* =========================
-   CANCEL BOOKING
-========================= */
+// ==========================================
+// CANCEL BOOKING
+// ==========================================
 
-async function cancelBooking(id) {
+async function cancelBooking(bookingId) {
+
+    const confirmCancel =
+        confirm(
+            "Are you sure you want to cancel this ticket?"
+        );
+
+
+    if (!confirmCancel) {
+
+        return;
+    }
+
 
     try {
 
         const response =
             await fetch(
-                `${API_URL}/bookings/${id}/cancel`,
+                `${API_URL}/bookings/${bookingId}/cancel`,
                 {
                     method: "PUT"
                 }
@@ -464,44 +465,45 @@ async function cancelBooking(id) {
 
 
         alert(
-            "Booking cancelled successfully!"
+            "Ticket cancelled successfully!"
         );
 
 
-        /* Refresh bookings */
+        // Reload bookings
 
-        loadBookings();
+        await loadBookings();
 
 
-        /* Refresh shows */
+        // Reload shows
+        // so available seats increase
 
-        loadShows();
+        await loadShows();
 
 
     } catch (error) {
 
         console.error(
-            "CANCEL ERROR:",
+            "Cancellation error:",
             error
         );
 
-
         alert(
-            "Unable to cancel booking: "
+            "Cancellation failed: "
             + error.message
         );
     }
 }
 
 
-/* =========================
-   FORMAT DATE
-========================= */
+// ==========================================
+// FORMAT DATE
+// ==========================================
 
 function formatDate(dateString) {
 
     if (!dateString) {
-        return "-";
+
+        return "N/A";
     }
 
 
@@ -509,14 +511,27 @@ function formatDate(dateString) {
         new Date(dateString);
 
 
+    if (isNaN(date.getTime())) {
+
+        return dateString;
+    }
+
+
     return date.toLocaleString();
 }
 
 
-/* =========================
-   INITIAL LOAD
-========================= */
+// ==========================================
+// PAGE LOAD
+// ==========================================
 
-loadShows();
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-loadBookings();
+        loadShows();
+
+        loadBookings();
+
+    }
+);
