@@ -1,0 +1,249 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    color: #222;
+}
+
+
+/* Header */
+
+header {
+    background: #111827;
+    color: white;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 8%;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 25px;
+}
+
+nav a:hover {
+    color: #60a5fa;
+}
+
+
+/* Hero */
+
+.hero {
+    min-height: 450px;
+
+    background:
+            linear-gradient(
+                    rgba(0, 0, 0, 0.65),
+                    rgba(0, 0, 0, 0.65)
+            ),
+            url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba")
+            center/cover;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    color: white;
+}
+
+.hero-content h1 {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.hero-content p {
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+
+/* Sections */
+
+.section {
+    padding: 60px 8%;
+}
+
+.section h2 {
+    text-align: center;
+    margin-bottom: 35px;
+    font-size: 32px;
+}
+
+
+/* Buttons */
+
+.btn {
+    display: inline-block;
+
+    background: #2563eb;
+    color: white;
+
+    border: none;
+    border-radius: 6px;
+
+    padding: 12px 22px;
+
+    cursor: pointer;
+
+    text-decoration: none;
+
+    font-size: 16px;
+}
+
+.btn:hover {
+    background: #1d4ed8;
+}
+
+
+/* Shows */
+
+.shows-container {
+    display: grid;
+
+    grid-template-columns:
+            repeat(auto-fit, minmax(250px, 1fr));
+
+    gap: 25px;
+}
+
+.show-card {
+    background: white;
+
+    border-radius: 10px;
+
+    padding: 25px;
+
+    box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.show-card h3 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.show-card p {
+    margin: 10px 0;
+}
+
+
+/* Booking */
+
+.booking-section {
+    background: #e5e7eb;
+}
+
+form {
+    max-width: 500px;
+
+    margin: auto;
+
+    background: white;
+
+    padding: 30px;
+
+    border-radius: 10px;
+
+    box-shadow:
+            0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    display: block;
+
+    margin-top: 15px;
+    margin-bottom: 6px;
+
+    font-weight: bold;
+}
+
+form input {
+    width: 100%;
+
+    padding: 12px;
+
+    border: 1px solid #ccc;
+
+    border-radius: 6px;
+}
+
+form button {
+    margin-top: 25px;
+}
+
+
+/* Message */
+
+#bookingMessage {
+    text-align: center;
+
+    margin-top: 20px;
+
+    font-weight: bold;
+}
+
+
+/* Bookings */
+
+.booking-card {
+    background: white;
+
+    margin: 15px auto;
+
+    padding: 20px;
+
+    max-width: 700px;
+
+    border-radius: 8px;
+
+    box-shadow:
+            0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Footer */
+
+footer {
+    background: #111827;
+
+    color: white;
+
+    text-align: center;
+
+    padding: 25px;
+}
+
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    nav a {
+        margin: 8px;
+    }
+
+    .hero-content h1 {
+        font-size: 35px;
+    }
+
+}
